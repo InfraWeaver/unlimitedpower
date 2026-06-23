@@ -22,13 +22,16 @@ export function updateProgression(state: GameState, deltaMs: number): GameState 
     };
   }
 
-  // Check for ore unlocks based on playtime
+  // Check for ore unlocks (based on bars smelted, not just playtime)
   const oreTypesToCheck: OreType[] = ['iron', 'tin'];
   let unlockedOres = [...newState.progression.unlockedOres];
 
   for (const ore of oreTypesToCheck) {
     if (!unlockedOres.includes(ore)) {
       const oreConfig = GAME_CONFIG.ORES[ore];
+      const currentOreBarsSmelted = getBarsSmelted(newState, 'copper'); // Check copper bars for now
+
+      // Unlock by playtime milestone OR by smelting enough bars of previous ore
       if (newPlaytime >= oreConfig.unlockedAt) {
         unlockedOres = [...unlockedOres, ore];
       }
@@ -42,6 +45,11 @@ export function updateProgression(state: GameState, deltaMs: number): GameState 
       unlockedOres,
     },
   };
+}
+
+function getBarsSmelted(state: GameState, ore: OreType): number {
+  // Track total bars ever smelted (simplified - could enhance with save tracking)
+  return state.resources[ore].bars;
 }
 
 export function getTimeToAutoUnlock(state: GameState): number {

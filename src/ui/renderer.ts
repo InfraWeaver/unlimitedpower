@@ -3,6 +3,7 @@ import { getDisplayPassiveRate } from '../game/mining';
 import { getTimeToAutoUnlock, formatTimeMs } from '../game/progression';
 import { getSmeltProgress, getSmeltRate } from '../game/smelting';
 import { getToolValue, getCraftCost } from '../game/crafting';
+import { getAllUpgrades, canAffordUpgrade } from '../game/upgrades';
 
 export function renderResources(state: GameState, container: HTMLElement): void {
   container.innerHTML = `
@@ -195,6 +196,56 @@ export function renderTabNavigation(
   });
 }
 
+export function renderUpgradesPanel(
+  state: GameState,
+  container: HTMLElement,
+  onBuyUpgrade: (upgradeId: 'hireMiner' | 'betterFurnace' | 'betterSmith') => void
+): void {
+  const upgrades = getAllUpgrades(state);
+
+  const upgradesHTML = Object.entries(upgrades)
+    .map(([id, info]) => {
+      const canAfford = canAffordUpgrade(state, id as keyof typeof upgrades);
+      const isMaxLevel = info.level >= info.maxLevel;
+      return `
+        <div class="upgrade-card">
+          <div class="upgrade-header">
+            <div class="upgrade-name">${info.name}</div>
+            <div class="upgrade-level">Lvl ${info.level}/${info.maxLevel}</div>
+          </div>
+          <div class="upgrade-description">${info.description}</div>
+          <div class="upgrade-cost">
+            <div>Cost: ${Math.floor(info.cost)} coins</div>
+            <div class="current-coins">(You have: ${Math.floor(state.resources.coins)})</div>
+          </div>
+          <button
+            class="buy-button ${!canAfford || isMaxLevel ? 'disabled' : ''}"
+            data-upgrade="${id}"
+            ${!canAfford || isMaxLevel ? 'disabled' : ''}
+          >
+            ${isMaxLevel ? 'MAX LEVEL' : 'Buy'}
+          </button>
+        </div>
+      `;
+    })
+    .join('');
+
+  container.innerHTML = `
+    <div class="upgrades-panel">
+      <div class="upgrades-grid">
+        ${upgradesHTML}
+      </div>
+    </div>
+  `;
+
+  document.querySelectorAll('.buy-button').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const upgradeId = (e.target as HTMLElement).getAttribute('data-upgrade') as 'hireMiner' | 'betterFurnace' | 'betterSmith';
+      onBuyUpgrade(upgradeId);
+    });
+  });
+}
+
 export function render(
   state: GameState,
   container: HTMLElement,
@@ -203,7 +254,8 @@ export function render(
   onQueueOre: (ore: OreType, amount: number) => void,
   onCraft: (ore: OreType) => void,
   onSell: () => void,
-  onSwitchTab: (tab: 'mining' | 'smelting' | 'crafting' | 'upgrades') => void
+  onSwitchTab: (tab: 'mining' | 'smelting' | 'crafting' | 'upgrades') => void,
+  onBuyUpgrade: (upgradeId: 'hireMiner' | 'betterFurnace' | 'betterSmith') => void
 ): void {
   renderResources(state, container);
 
@@ -236,7 +288,7 @@ export function render(
     renderSmeltingPanel(state, contentArea, onQueueOre);
   } else if (activeTab === 'crafting') {
     renderCraftingPanel(state, contentArea, onCraft, onSell);
-  } else {
-    contentArea.innerHTML = '<div class="coming-soon">Upgrades coming soon!</div>';
+  } else if (activeTab === 'upgrades') {
+    renderUpgradesPanel(state, contentArea, onBuyUpgrade);
   }
 }

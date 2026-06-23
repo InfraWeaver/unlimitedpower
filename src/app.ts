@@ -3,6 +3,7 @@ import { handleMiningClick, updatePassiveMining } from './game/mining';
 import { updateProgression } from './game/progression';
 import { updateSmelting, queueOreForSmelting } from './game/smelting';
 import { craftTools, sellTools } from './game/crafting';
+import { purchaseUpgrade } from './game/upgrades';
 import { render } from './ui/renderer';
 
 export class Game {
@@ -56,6 +57,11 @@ export class Game {
     this.renderFrame();
   };
 
+  private handleBuyUpgrade = (upgradeId: 'hireMiner' | 'betterFurnace' | 'betterSmith'): void => {
+    this.state = purchaseUpgrade(this.state, upgradeId);
+    this.renderFrame();
+  };
+
   private renderFrame = (): void => {
     render(
       this.state,
@@ -65,7 +71,8 @@ export class Game {
       this.handleQueueOre,
       this.handleCraftTools,
       this.handleSellTools,
-      this.switchTab
+      this.switchTab,
+      this.handleBuyUpgrade
     );
   };
 
