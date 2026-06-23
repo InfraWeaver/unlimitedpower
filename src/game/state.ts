@@ -37,6 +37,11 @@ export interface GameState {
     unlockedOres: OreType[];
     autoUnlockTriggered: boolean;
   };
+
+  // UI state
+  ui: {
+    activeTab: 'mining' | 'smelting' | 'crafting' | 'upgrades';
+  };
 }
 
 export function createInitialState(): GameState {
@@ -67,6 +72,9 @@ export function createInitialState(): GameState {
       totalPlaytimeMs: 0,
       unlockedOres: ['copper'],
       autoUnlockTriggered: false,
+    },
+    ui: {
+      activeTab: 'mining',
     },
   };
 }

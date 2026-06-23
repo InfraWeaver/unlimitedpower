@@ -1,6 +1,8 @@
 import { GameState, createInitialState } from './game/state';
 import { handleMiningClick, updatePassiveMining } from './game/mining';
 import { updateProgression } from './game/progression';
+import { updateSmelting, queueOreForSmelting } from './game/smelting';
+import { craftTools, sellTools } from './game/crafting';
 import { render } from './ui/renderer';
 
 export class Game {
@@ -27,11 +29,44 @@ export class Game {
 
   private update = (deltaMs: number): void => {
     this.state = updatePassiveMining(this.state, deltaMs);
+    this.state = updateSmelting(this.state, deltaMs);
     this.state = updateProgression(this.state, deltaMs);
   };
 
+  private handleQueueOre = (ore: 'copper' | 'iron' | 'tin', amount: number): void => {
+    this.state = queueOreForSmelting(this.state, ore, amount);
+    this.renderFrame();
+  };
+
+  private handleCraftTools = (ore: 'copper' | 'iron' | 'tin'): void => {
+    this.state = craftTools(this.state, ore, 1);
+    this.renderFrame();
+  };
+
+  private handleSellTools = (): void => {
+    this.state = sellTools(this.state, this.state.resources.tools);
+    this.renderFrame();
+  };
+
+  private switchTab = (tab: 'mining' | 'smelting' | 'crafting' | 'upgrades'): void => {
+    this.state = {
+      ...this.state,
+      ui: { ...this.state.ui, activeTab: tab },
+    };
+    this.renderFrame();
+  };
+
   private renderFrame = (): void => {
-    render(this.state, this.resourcesContainer, this.contentContainer, this.handleOreClick);
+    render(
+      this.state,
+      this.resourcesContainer,
+      this.contentContainer,
+      this.handleOreClick,
+      this.handleQueueOre,
+      this.handleCraftTools,
+      this.handleSellTools,
+      this.switchTab
+    );
   };
 
   private gameLoop = (currentTime: number): void => {
