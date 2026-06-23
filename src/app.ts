@@ -4,6 +4,7 @@ import { updateProgression } from './game/progression';
 import { updateSmelting, queueOreForSmelting } from './game/smelting';
 import { craftTools, sellTools } from './game/crafting';
 import { purchaseUpgrade } from './game/upgrades';
+import { saveGame, loadGame } from './game/saves';
 import { render } from './ui/renderer';
 
 export class Game {
@@ -14,13 +15,17 @@ export class Game {
   private animationFrameId: number | null = null;
 
   constructor() {
-    this.state = createInitialState();
+    const savedState = loadGame();
+    this.state = savedState || createInitialState();
     this.resourcesContainer = document.getElementById('resources-container')!;
     this.contentContainer = document.getElementById('content-container')!;
 
     if (!this.resourcesContainer || !this.contentContainer) {
       throw new Error('Required DOM elements not found');
     }
+
+    // Save game periodically (every 5 seconds)
+    setInterval(() => saveGame(this.state), 5000);
   }
 
   private handleOreClick = (): void => {
@@ -101,6 +106,7 @@ export class Game {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
+    saveGame(this.state);
   }
 
   public getState(): GameState {
