@@ -40,7 +40,16 @@ export interface GameState {
 
   // UI state
   ui: {
-    activeTab: 'mining' | 'smelting' | 'crafting' | 'upgrades';
+    activeTab: 'mining' | 'smelting' | 'crafting' | 'upgrades' | 'stats' | 'prestige';
+  };
+
+  // Statistics
+  stats: {
+    totalOreEverMined: number;
+    totalCoinsEverEarned: number;
+    totalUpgradesPurchased: number;
+    totalPrestigeLevels: number;
+    prestigeLevels: number;
   };
 }
 
@@ -75,6 +84,13 @@ export function createInitialState(): GameState {
     },
     ui: {
       activeTab: 'mining',
+    },
+    stats: {
+      totalOreEverMined: 0,
+      totalCoinsEverEarned: 0,
+      totalUpgradesPurchased: 0,
+      totalPrestigeLevels: 0,
+      prestigeLevels: 0,
     },
   };
 }

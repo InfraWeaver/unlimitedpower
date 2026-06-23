@@ -5,6 +5,7 @@ import { updateSmelting, queueOreForSmelting } from './game/smelting';
 import { craftTools, sellTools } from './game/crafting';
 import { purchaseUpgrade } from './game/upgrades';
 import { saveGame, loadGame } from './game/saves';
+import { performPrestige } from './game/prestige';
 import { render } from './ui/renderer';
 
 export class Game {
@@ -67,6 +68,11 @@ export class Game {
     this.renderFrame();
   };
 
+  private handlePrestige = (): void => {
+    this.state = performPrestige(this.state);
+    this.renderFrame();
+  };
+
   private renderFrame = (): void => {
     render(
       this.state,
@@ -77,7 +83,8 @@ export class Game {
       this.handleCraftTools,
       this.handleSellTools,
       this.switchTab,
-      this.handleBuyUpgrade
+      this.handleBuyUpgrade,
+      this.handlePrestige
     );
   };
 

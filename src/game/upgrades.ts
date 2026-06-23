@@ -1,5 +1,6 @@
 import { GameState } from './state';
 import { GAME_CONFIG, getUpgradeCost } from './constants';
+import { trackUpgradePurchased } from './statistics';
 
 export interface UpgradeInfo {
   name: string;
@@ -35,7 +36,7 @@ export function purchaseUpgrade(state: GameState, upgradeId: keyof typeof GAME_C
 
   const info = getUpgradeInfo(state, upgradeId);
 
-  return {
+  let newState = {
     ...state,
     resources: {
       ...state.resources,
@@ -46,6 +47,11 @@ export function purchaseUpgrade(state: GameState, upgradeId: keyof typeof GAME_C
       [`${upgradeId}_level`]: state.upgrades[`${upgradeId}_level` as keyof typeof state.upgrades] + 1,
     },
   };
+
+  // Track upgrade purchase
+  newState = trackUpgradePurchased(newState);
+
+  return newState;
 }
 
 export function getAllUpgrades(state: GameState): Record<keyof typeof GAME_CONFIG.UPGRADES, UpgradeInfo> {

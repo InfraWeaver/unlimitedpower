@@ -4,6 +4,8 @@ import { getTimeToAutoUnlock, formatTimeMs } from '../game/progression';
 import { getSmeltProgress, getSmeltRate } from '../game/smelting';
 import { getToolValue, getCraftCost } from '../game/crafting';
 import { getAllUpgrades, canAffordUpgrade } from '../game/upgrades';
+import { getPrestigeReward, canPrestige } from '../game/prestige';
+import { formatLargeNumber } from '../game/statistics';
 
 export function renderResources(state: GameState, container: HTMLElement): void {
   container.innerHTML = `
@@ -171,12 +173,92 @@ export function renderCraftingPanel(
   document.querySelector('.sell-button')?.addEventListener('click', onSell);
 }
 
+export function renderStatisticsPanel(state: GameState, container: HTMLElement): void {
+  const stats = state.stats;
+
+  container.innerHTML = `
+    <div class="stats-panel">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-label">Total Ore Mined</div>
+          <div class="stat-card-value">${formatLargeNumber(stats.totalOreEverMined)}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Total Coins Earned</div>
+          <div class="stat-card-value">${formatLargeNumber(stats.totalCoinsEverEarned)}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Upgrades Purchased</div>
+          <div class="stat-card-value">${stats.totalUpgradesPurchased}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Prestige Level</div>
+          <div class="stat-card-value">${stats.prestigeLevels}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Total Prestiges</div>
+          <div class="stat-card-value">${stats.totalPrestigeLevels}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Play Time</div>
+          <div class="stat-card-value">${formatTimeMs(state.progression.totalPlaytimeMs)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+export function renderPrestigePanel(
+  state: GameState,
+  container: HTMLElement,
+  onPrestige: () => void
+): void {
+  const prestigeReward = getPrestigeReward(state);
+  const canDo = canPrestige(state);
+  const bonus = ((state.stats.prestigeLevels + prestigeReward) * 5).toFixed(1);
+
+  container.innerHTML = `
+    <div class="prestige-panel">
+      <div class="prestige-card">
+        <h3>Ascend to New Heights</h3>
+        <div class="prestige-info">
+          <div class="prestige-stat">
+            <div class="prestige-label">Current Level</div>
+            <div class="prestige-value">${state.stats.prestigeLevels}</div>
+          </div>
+          <div class="prestige-stat">
+            <div class="prestige-label">Gain Level</div>
+            <div class="prestige-value prestige-gain">${prestigeReward}</div>
+          </div>
+          <div class="prestige-stat">
+            <div class="prestige-label">New Bonus</div>
+            <div class="prestige-value">+${bonus}% mining</div>
+          </div>
+        </div>
+        <div class="prestige-requirement">
+          <div>Requires 1,000,000 coins</div>
+          <div>You have: ${formatLargeNumber(state.resources.coins)}</div>
+        </div>
+        <button class="prestige-button ${!canDo ? 'disabled' : ''}" ${!canDo ? 'disabled' : ''}>
+          ${canDo ? '✨ PRESTIGE NOW' : 'Need 1M Coins'}
+        </button>
+        <div class="prestige-effect">
+          <strong>Effect:</strong> Reset all progress but gain +5% passive mining per prestige level.
+          Prestige levels stack forever!
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.querySelector('.prestige-button')?.addEventListener('click', onPrestige);
+}
+
 export function renderTabNavigation(
   state: GameState,
   container: HTMLElement,
-  onSwitchTab: (tab: 'mining' | 'smelting' | 'crafting' | 'upgrades') => void
+  onSwitchTab: (tab: 'mining' | 'smelting' | 'crafting' | 'upgrades' | 'stats' | 'prestige') => void
 ): void {
-  const tabs = ['mining', 'smelting', 'crafting', 'upgrades'] as const;
+  const tabs = ['mining', 'smelting', 'crafting', 'upgrades', 'stats', 'prestige'] as const;
 
   container.innerHTML = tabs
     .map(
@@ -254,8 +336,9 @@ export function render(
   onQueueOre: (ore: OreType, amount: number) => void,
   onCraft: (ore: OreType) => void,
   onSell: () => void,
-  onSwitchTab: (tab: 'mining' | 'smelting' | 'crafting' | 'upgrades') => void,
-  onBuyUpgrade: (upgradeId: 'hireMiner' | 'betterFurnace' | 'betterSmith') => void
+  onSwitchTab: (tab: 'mining' | 'smelting' | 'crafting' | 'upgrades' | 'stats' | 'prestige') => void,
+  onBuyUpgrade: (upgradeId: 'hireMiner' | 'betterFurnace' | 'betterSmith') => void,
+  onPrestige: () => void
 ): void {
   renderResources(state, container);
 
@@ -290,5 +373,9 @@ export function render(
     renderCraftingPanel(state, contentArea, onCraft, onSell);
   } else if (activeTab === 'upgrades') {
     renderUpgradesPanel(state, contentArea, onBuyUpgrade);
+  } else if (activeTab === 'stats') {
+    renderStatisticsPanel(state, contentArea);
+  } else if (activeTab === 'prestige') {
+    renderPrestigePanel(state, contentArea, onPrestige);
   }
 }

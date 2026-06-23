@@ -1,10 +1,12 @@
 import { GameState } from './state';
 import { GAME_CONFIG } from './constants';
+import { calculatePrestigeBonus } from './prestige';
+import { trackOreMined } from './statistics';
 
 export function handleMiningClick(state: GameState): GameState {
   const clickAmount = state.mining.clickBonus;
 
-  return {
+  let newState = {
     ...state,
     resources: {
       ...state.resources,
@@ -14,6 +16,11 @@ export function handleMiningClick(state: GameState): GameState {
       },
     },
   };
+
+  // Track ore mined
+  newState = trackOreMined(newState, clickAmount);
+
+  return newState;
 }
 
 export function updatePassiveMining(state: GameState, deltaMs: number): GameState {
@@ -23,15 +30,16 @@ export function updatePassiveMining(state: GameState, deltaMs: number): GameStat
     return state;
   }
 
-  // Calculate passive rate with upgrades
+  // Calculate passive rate with upgrades and prestige
   const passiveRateMultiplier =
     1 + state.upgrades.hireMiner_level * (GAME_CONFIG.HIRE_MINER_RATE_MULTIPLIER - 1);
-  const effectiveRate = GAME_CONFIG.BASE_PASSIVE_RATE * passiveRateMultiplier;
+  const prestigeBonus = calculatePrestigeBonus(state.stats.prestigeLevels);
+  const effectiveRate = GAME_CONFIG.BASE_PASSIVE_RATE * passiveRateMultiplier * prestigeBonus;
 
   // Generate ore based on time elapsed
   const oreGenerated = (timeSinceLastUpdate / 1000) * effectiveRate;
 
-  return {
+  let newState = {
     ...state,
     resources: {
       ...state.resources,
@@ -46,10 +54,16 @@ export function updatePassiveMining(state: GameState, deltaMs: number): GameStat
       lastPassiveUpdate: Date.now(),
     },
   };
+
+  // Track ore mined
+  newState = trackOreMined(newState, oreGenerated);
+
+  return newState;
 }
 
 export function getDisplayPassiveRate(state: GameState): number {
   const passiveRateMultiplier =
     1 + state.upgrades.hireMiner_level * (GAME_CONFIG.HIRE_MINER_RATE_MULTIPLIER - 1);
-  return GAME_CONFIG.BASE_PASSIVE_RATE * passiveRateMultiplier;
+  const prestigeBonus = calculatePrestigeBonus(state.stats.prestigeLevels);
+  return GAME_CONFIG.BASE_PASSIVE_RATE * passiveRateMultiplier * prestigeBonus;
 }
