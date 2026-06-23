@@ -44,7 +44,7 @@ export interface GameState {
 
   // UI state
   ui: {
-    activeTab: 'mining' | 'smelting' | 'crafting' | 'upgrades' | 'stats' | 'prestige';
+    activeTab: 'mining' | 'smelting' | 'crafting' | 'upgrades' | 'stats' | 'prestige' | 'automation' | 'workers';
   };
 
   // Statistics
@@ -89,7 +89,7 @@ export interface GameState {
   prestigePerks: {
     miningBoost: number; // levels purchased
     smeltingBoost: number;
-    autoUnlockEarly: boolean;
+    autoUnlockEarly: number;
   };
 
   // Challenges & Combos
@@ -168,7 +168,7 @@ export function createInitialState(): GameState {
     prestigePerks: {
       miningBoost: 0,
       smeltingBoost: 0,
-      autoUnlockEarly: false,
+      autoUnlockEarly: 0,
     },
     challenges: {
       dailyGoalProgress: 0,

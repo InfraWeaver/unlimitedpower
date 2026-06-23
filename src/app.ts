@@ -1,4 +1,4 @@
-import { GameState, createInitialState } from './game/state';
+import { GameState, OreType, createInitialState } from './game/state';
 import { handleMiningClick, updatePassiveMining } from './game/mining';
 import { updateProgression } from './game/progression';
 import { updateSmelting, queueOreForSmelting } from './game/smelting';
@@ -10,6 +10,7 @@ import { updateAutomation, toggleAutomation } from './game/automation';
 import { hireWorker, updateWorkerMorale } from './game/workers';
 import { checkForRandomEvent } from './game/events';
 import { render } from './ui/renderer';
+import { GAME_CONFIG } from './game/constants';
 
 export class Game {
   private state: GameState;
@@ -46,12 +47,12 @@ export class Game {
     this.state = checkForRandomEvent(this.state);
   };
 
-  private handleQueueOre = (ore: 'copper' | 'iron' | 'tin', amount: number): void => {
+  private handleQueueOre = (ore: OreType, amount: number): void => {
     this.state = queueOreForSmelting(this.state, ore, amount);
     this.renderFrame();
   };
 
-  private handleCraftTools = (ore: 'copper' | 'iron' | 'tin'): void => {
+  private handleCraftTools = (ore: OreType): void => {
     this.state = craftTools(this.state, ore, 1);
     this.renderFrame();
   };
@@ -61,7 +62,7 @@ export class Game {
     this.renderFrame();
   };
 
-  private switchTab = (tab: 'mining' | 'smelting' | 'crafting' | 'upgrades'): void => {
+  private switchTab = (tab: 'mining' | 'smelting' | 'crafting' | 'upgrades' | 'stats' | 'prestige' | 'automation' | 'workers'): void => {
     this.state = {
       ...this.state,
       ui: { ...this.state.ui, activeTab: tab },
@@ -69,7 +70,7 @@ export class Game {
     this.renderFrame();
   };
 
-  private handleBuyUpgrade = (upgradeId: 'hireMiner' | 'betterFurnace' | 'betterSmith'): void => {
+  private handleBuyUpgrade = (upgradeId: keyof typeof GAME_CONFIG.UPGRADES): void => {
     this.state = purchaseUpgrade(this.state, upgradeId);
     this.renderFrame();
   };
