@@ -416,7 +416,7 @@ export function renderTabNavigation(
 export function renderUpgradesPanel(
   state: GameState,
   container: HTMLElement,
-  onBuyUpgrade: (upgradeId: 'hireMiner' | 'betterFurnace' | 'betterSmith') => void
+  onBuyUpgrade: (upgradeId: string) => void
 ): void {
   const upgrades = getAllUpgrades(state);
 
@@ -457,7 +457,7 @@ export function renderUpgradesPanel(
 
   document.querySelectorAll('.buy-button').forEach((btn) => {
     btn.addEventListener('click', (e) => {
-      const upgradeId = (e.target as HTMLElement).getAttribute('data-upgrade') as 'hireMiner' | 'betterFurnace' | 'betterSmith';
+      const upgradeId = (e.target as HTMLElement).getAttribute('data-upgrade') || '';
       onBuyUpgrade(upgradeId);
     });
   });
@@ -472,7 +472,7 @@ export function render(
   onCraft: (ore: OreType) => void,
   onSell: () => void,
   onSwitchTab: (tab: 'mining' | 'smelting' | 'crafting' | 'upgrades' | 'stats' | 'prestige' | 'automation' | 'workers') => void,
-  onBuyUpgrade: (upgradeId: 'hireMiner' | 'betterFurnace' | 'betterSmith') => void,
+  onBuyUpgrade: (upgradeId: string) => void,
   onPrestige: () => void,
   onToggleAutomation: (feature: 'autoSmelt' | 'autoCraft' | 'autoSell') => void,
   onHireWorker: (type: 'miner' | 'smelter' | 'crafter') => void

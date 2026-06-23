@@ -70,8 +70,8 @@ export class Game {
     this.renderFrame();
   };
 
-  private handleBuyUpgrade = (upgradeId: keyof typeof GAME_CONFIG.UPGRADES): void => {
-    this.state = purchaseUpgrade(this.state, upgradeId);
+  private handleBuyUpgrade = (upgradeId: string): void => {
+    this.state = purchaseUpgrade(this.state, upgradeId as keyof typeof GAME_CONFIG.UPGRADES);
     this.renderFrame();
   };
 
