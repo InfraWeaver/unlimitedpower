@@ -6,6 +6,8 @@ import { getToolValue, getCraftCost } from '../game/crafting';
 import { getAllUpgrades, canAffordUpgrade } from '../game/upgrades';
 import { getPrestigeReward, canPrestige } from '../game/prestige';
 import { formatLargeNumber } from '../game/statistics';
+import { WORKER_CONFIG, getWorkerCost, canHireWorker, getTotalWorkers } from '../game/workers';
+import { getEventStatus } from '../game/events';
 
 export function renderResources(state: GameState, container: HTMLElement): void {
   container.innerHTML = `
@@ -208,6 +210,107 @@ export function renderStatisticsPanel(state: GameState, container: HTMLElement):
   `;
 }
 
+export function renderAutomationPanel(
+  state: GameState,
+  container: HTMLElement,
+  onToggle: (feature: 'autoSmelt' | 'autoCraft' | 'autoSell') => void
+): void {
+  const features = [
+    { id: 'autoSmelt', name: 'Auto-Smelt', desc: 'Queue all available ore automatically' },
+    { id: 'autoCraft', name: 'Auto-Craft', desc: 'Craft tools from available bars' },
+    { id: 'autoSell', name: 'Auto-Sell', desc: 'Sell all tools automatically' },
+  ];
+
+  const featureHTML = features
+    .map(
+      (f) => `
+    <div class="automation-item">
+      <div class="automation-header">
+        <div class="automation-name">${f.name}</div>
+        <button class="toggle-button ${state.automation[f.id as keyof typeof state.automation] ? 'active' : ''}" data-feature="${f.id}">
+          ${state.automation[f.id as keyof typeof state.automation] ? '✓ ON' : '○ OFF'}
+        </button>
+      </div>
+      <div class="automation-desc">${f.desc}</div>
+    </div>
+  `
+    )
+    .join('');
+
+  container.innerHTML = `
+    <div class="automation-panel">
+      <div class="automation-grid">
+        ${featureHTML}
+      </div>
+    </div>
+  `;
+
+  document.querySelectorAll('.toggle-button').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const feature = (e.target as HTMLElement).getAttribute('data-feature') as 'autoSmelt' | 'autoCraft' | 'autoSell';
+      onToggle(feature);
+    });
+  });
+}
+
+export function renderWorkersPanel(
+  state: GameState,
+  container: HTMLElement,
+  onHire: (type: 'miner' | 'smelter' | 'crafter') => void
+): void {
+  const workerTypes = ['miner', 'smelter', 'crafter'] as const;
+
+  const workerHTML = workerTypes
+    .map((type) => {
+      const config = WORKER_CONFIG[type];
+      const worker = state.workers[type];
+      const cost = getWorkerCost(type, worker.count);
+      const canAfford = canHireWorker(state, type);
+
+      return `
+        <div class="worker-card">
+          <div class="worker-header">
+            <div class="worker-name">${config.name}</div>
+            <div class="worker-count">×${worker.count}</div>
+          </div>
+          <div class="worker-desc">${config.description}</div>
+          <div class="worker-morale">
+            <div class="morale-bar">
+              <div class="morale-fill" style="width: ${worker.morale}%"></div>
+            </div>
+            <div class="morale-text">Morale: ${worker.morale.toFixed(0)}%</div>
+          </div>
+          <div class="worker-cost">Cost: ${formatLargeNumber(cost)} coins</div>
+          <button class="hire-button ${!canAfford ? 'disabled' : ''}" data-worker="${type}" ${!canAfford ? 'disabled' : ''}>
+            Hire ${config.name}
+          </button>
+        </div>
+      `;
+    })
+    .join('');
+
+  const totalWorkers = getTotalWorkers(state);
+
+  container.innerHTML = `
+    <div class="workers-panel">
+      <div class="workers-header">
+        <h3>Workers</h3>
+        <div>Total Hired: ${totalWorkers}</div>
+      </div>
+      <div class="workers-grid">
+        ${workerHTML}
+      </div>
+    </div>
+  `;
+
+  document.querySelectorAll('.hire-button').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const workerType = (e.target as HTMLElement).getAttribute('data-worker') as 'miner' | 'smelter' | 'crafter';
+      onHire(workerType);
+    });
+  });
+}
+
 export function renderPrestigePanel(
   state: GameState,
   container: HTMLElement,
@@ -253,12 +356,44 @@ export function renderPrestigePanel(
   document.querySelector('.prestige-button')?.addEventListener('click', onPrestige);
 }
 
+export function renderEventNotification(state: GameState, container: HTMLElement): void {
+  const eventStatus = getEventStatus(state);
+
+  if (!eventStatus.active) {
+    container.innerHTML = '';
+    return;
+  }
+
+  let bgColor = '#e3f2fd';
+  let borderColor = '#2196f3';
+
+  if (eventStatus.name.includes('Strike')) {
+    bgColor = '#fff3e0';
+    borderColor = '#ff9800';
+  } else if (eventStatus.name.includes('Break')) {
+    bgColor = '#ffebee';
+    borderColor = '#f44336';
+  } else if (eventStatus.name.includes('Crash')) {
+    bgColor = '#f3e5f5';
+    borderColor = '#9c27b0';
+  } else if (eventStatus.name.includes('Discovery')) {
+    bgColor = '#e8f5e9';
+    borderColor = '#4caf50';
+  }
+
+  container.innerHTML = `
+    <div class="event-notification" style="background: ${bgColor}; border-color: ${borderColor};">
+      <div class="event-text">${eventStatus.name} - ${eventStatus.timeLeft} remaining</div>
+    </div>
+  `;
+}
+
 export function renderTabNavigation(
   state: GameState,
   container: HTMLElement,
-  onSwitchTab: (tab: 'mining' | 'smelting' | 'crafting' | 'upgrades' | 'stats' | 'prestige') => void
+  onSwitchTab: (tab: 'mining' | 'smelting' | 'crafting' | 'upgrades' | 'stats' | 'prestige' | 'automation' | 'workers') => void
 ): void {
-  const tabs = ['mining', 'smelting', 'crafting', 'upgrades', 'stats', 'prestige'] as const;
+  const tabs = ['mining', 'smelting', 'crafting', 'upgrades', 'automation', 'workers', 'stats', 'prestige'] as const;
 
   container.innerHTML = tabs
     .map(
@@ -336,9 +471,11 @@ export function render(
   onQueueOre: (ore: OreType, amount: number) => void,
   onCraft: (ore: OreType) => void,
   onSell: () => void,
-  onSwitchTab: (tab: 'mining' | 'smelting' | 'crafting' | 'upgrades' | 'stats' | 'prestige') => void,
+  onSwitchTab: (tab: 'mining' | 'smelting' | 'crafting' | 'upgrades' | 'stats' | 'prestige' | 'automation' | 'workers') => void,
   onBuyUpgrade: (upgradeId: 'hireMiner' | 'betterFurnace' | 'betterSmith') => void,
-  onPrestige: () => void
+  onPrestige: () => void,
+  onToggleAutomation: (feature: 'autoSmelt' | 'autoCraft' | 'autoSell') => void,
+  onHireWorker: (type: 'miner' | 'smelter' | 'crafter') => void
 ): void {
   renderResources(state, container);
 
@@ -353,6 +490,15 @@ export function render(
   }
 
   renderTabNavigation(state, document.getElementById('tab-nav')!, onSwitchTab);
+
+  // Create event notification area if it doesn't exist
+  if (!document.getElementById('event-notification')) {
+    const eventNotif = document.createElement('div');
+    eventNotif.id = 'event-notification';
+    eventNotif.className = 'event-notification-area';
+    contentContainer.insertBefore(eventNotif, contentContainer.firstChild);
+  }
+  renderEventNotification(state, document.getElementById('event-notification')!);
 
   // Create content area if it doesn't exist
   if (!document.getElementById('tab-content')) {
@@ -373,6 +519,10 @@ export function render(
     renderCraftingPanel(state, contentArea, onCraft, onSell);
   } else if (activeTab === 'upgrades') {
     renderUpgradesPanel(state, contentArea, onBuyUpgrade);
+  } else if (activeTab === 'automation') {
+    renderAutomationPanel(state, contentArea, onToggleAutomation);
+  } else if (activeTab === 'workers') {
+    renderWorkersPanel(state, contentArea, onHireWorker);
   } else if (activeTab === 'stats') {
     renderStatisticsPanel(state, contentArea);
   } else if (activeTab === 'prestige') {

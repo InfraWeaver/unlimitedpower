@@ -6,6 +6,9 @@ import { craftTools, sellTools } from './game/crafting';
 import { purchaseUpgrade } from './game/upgrades';
 import { saveGame, loadGame } from './game/saves';
 import { performPrestige } from './game/prestige';
+import { updateAutomation, toggleAutomation } from './game/automation';
+import { hireWorker, updateWorkerMorale } from './game/workers';
+import { checkForRandomEvent } from './game/events';
 import { render } from './ui/renderer';
 
 export class Game {
@@ -38,6 +41,9 @@ export class Game {
     this.state = updatePassiveMining(this.state, deltaMs);
     this.state = updateSmelting(this.state, deltaMs);
     this.state = updateProgression(this.state, deltaMs);
+    this.state = updateAutomation(this.state);
+    this.state = updateWorkerMorale(this.state, deltaMs);
+    this.state = checkForRandomEvent(this.state);
   };
 
   private handleQueueOre = (ore: 'copper' | 'iron' | 'tin', amount: number): void => {
@@ -73,6 +79,16 @@ export class Game {
     this.renderFrame();
   };
 
+  private handleToggleAutomation = (feature: 'autoSmelt' | 'autoCraft' | 'autoSell'): void => {
+    this.state = toggleAutomation(this.state, feature);
+    this.renderFrame();
+  };
+
+  private handleHireWorker = (workerType: 'miner' | 'smelter' | 'crafter'): void => {
+    this.state = hireWorker(this.state, workerType);
+    this.renderFrame();
+  };
+
   private renderFrame = (): void => {
     render(
       this.state,
@@ -84,7 +100,9 @@ export class Game {
       this.handleSellTools,
       this.switchTab,
       this.handleBuyUpgrade,
-      this.handlePrestige
+      this.handlePrestige,
+      this.handleToggleAutomation,
+      this.handleHireWorker
     );
   };
 

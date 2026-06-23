@@ -2,6 +2,8 @@ import { GameState } from './state';
 import { GAME_CONFIG } from './constants';
 import { calculatePrestigeBonus } from './prestige';
 import { trackOreMined } from './statistics';
+import { getWorkerBonus } from './workers';
+import { getEventMultiplier } from './events';
 
 export function handleMiningClick(state: GameState): GameState {
   const clickAmount = state.mining.clickBonus;
@@ -30,11 +32,13 @@ export function updatePassiveMining(state: GameState, deltaMs: number): GameStat
     return state;
   }
 
-  // Calculate passive rate with upgrades and prestige
+  // Calculate passive rate with upgrades, prestige, workers, and events
   const passiveRateMultiplier =
     1 + state.upgrades.hireMiner_level * (GAME_CONFIG.HIRE_MINER_RATE_MULTIPLIER - 1);
   const prestigeBonus = calculatePrestigeBonus(state.stats.prestigeLevels);
-  const effectiveRate = GAME_CONFIG.BASE_PASSIVE_RATE * passiveRateMultiplier * prestigeBonus;
+  const workerBonus = getWorkerBonus(state, 'miner');
+  const eventMultiplier = getEventMultiplier(state, 'ore_strike');
+  const effectiveRate = GAME_CONFIG.BASE_PASSIVE_RATE * passiveRateMultiplier * prestigeBonus * workerBonus * eventMultiplier;
 
   // Generate ore based on time elapsed
   const oreGenerated = (timeSinceLastUpdate / 1000) * effectiveRate;
@@ -65,5 +69,7 @@ export function getDisplayPassiveRate(state: GameState): number {
   const passiveRateMultiplier =
     1 + state.upgrades.hireMiner_level * (GAME_CONFIG.HIRE_MINER_RATE_MULTIPLIER - 1);
   const prestigeBonus = calculatePrestigeBonus(state.stats.prestigeLevels);
-  return GAME_CONFIG.BASE_PASSIVE_RATE * passiveRateMultiplier * prestigeBonus;
+  const workerBonus = getWorkerBonus(state, 'miner');
+  const eventMultiplier = getEventMultiplier(state, 'ore_strike');
+  return GAME_CONFIG.BASE_PASSIVE_RATE * passiveRateMultiplier * prestigeBonus * workerBonus * eventMultiplier;
 }

@@ -1,6 +1,8 @@
 import { GameState, OreType } from './state';
 import { GAME_CONFIG } from './constants';
 import { trackCoinsEarned } from './statistics';
+import { getWorkerBonus } from './workers';
+import { getEventMultiplier } from './events';
 
 export function craftTools(state: GameState, ore: OreType, numTools: number = 1): GameState {
   const barsNeeded = GAME_CONFIG.BARS_PER_TOOL * numTools;
@@ -32,7 +34,10 @@ export function sellTools(state: GameState, numTools: number = 1): GameState {
     return state;
   }
 
-  const coinsPerTool = GAME_CONFIG.BASE_COINS_PER_TOOL * (1 + state.upgrades.betterSmith_level * (GAME_CONFIG.BETTER_SMITH_OUTPUT_MULTIPLIER - 1));
+  const baseCoinsPerTool = GAME_CONFIG.BASE_COINS_PER_TOOL * (1 + state.upgrades.betterSmith_level * (GAME_CONFIG.BETTER_SMITH_OUTPUT_MULTIPLIER - 1));
+  const workerBonus = getWorkerBonus(state, 'crafter');
+  const eventMultiplier = getEventMultiplier(state, 'market_crash');
+  const coinsPerTool = baseCoinsPerTool * workerBonus * eventMultiplier;
   const coinsGenerated = Math.floor(coinsPerTool * toolsToSell);
 
   let newState = {
@@ -51,7 +56,10 @@ export function sellTools(state: GameState, numTools: number = 1): GameState {
 }
 
 export function getToolValue(state: GameState): number {
-  return GAME_CONFIG.BASE_COINS_PER_TOOL * (1 + state.upgrades.betterSmith_level * (GAME_CONFIG.BETTER_SMITH_OUTPUT_MULTIPLIER - 1));
+  const baseValue = GAME_CONFIG.BASE_COINS_PER_TOOL * (1 + state.upgrades.betterSmith_level * (GAME_CONFIG.BETTER_SMITH_OUTPUT_MULTIPLIER - 1));
+  const workerBonus = getWorkerBonus(state, 'crafter');
+  const eventMultiplier = getEventMultiplier(state, 'market_crash');
+  return baseValue * workerBonus * eventMultiplier;
 }
 
 export function getCraftCost(ore: OreType): number {

@@ -1,5 +1,7 @@
 import { GameState, OreType } from './state';
 import { GAME_CONFIG } from './constants';
+import { getWorkerBonus } from './workers';
+import { getEventStatus } from './events';
 
 export function queueOreForSmelting(state: GameState, ore: OreType, amount: number): GameState {
   const oreData = state.resources[ore];
@@ -29,8 +31,15 @@ export function queueOreForSmelting(state: GameState, ore: OreType, amount: numb
 }
 
 export function updateSmelting(state: GameState, deltaMs: number): GameState {
+  // If furnace is broken (event active), don't smelt
+  const eventStatus = getEventStatus(state);
+  if (eventStatus.active && eventStatus.name.includes('Furnace')) {
+    return state;
+  }
+
   const speedMultiplier = 1 + state.upgrades.betterFurnace_level * (GAME_CONFIG.BETTER_FURNACE_SPEED_MULTIPLIER - 1);
-  const smeltTimeMs = GAME_CONFIG.BASE_SMELT_TIME_MS / speedMultiplier;
+  const workerBonus = getWorkerBonus(state, 'smelter');
+  const smeltTimeMs = GAME_CONFIG.BASE_SMELT_TIME_MS / (speedMultiplier * workerBonus);
 
   let newState = state;
 
@@ -85,5 +94,6 @@ export function getSmeltProgress(ore: OreType, state: GameState): number {
 
 export function getSmeltRate(state: GameState): number {
   const speedMultiplier = 1 + state.upgrades.betterFurnace_level * (GAME_CONFIG.BETTER_FURNACE_SPEED_MULTIPLIER - 1);
-  return (1000 / GAME_CONFIG.BASE_SMELT_TIME_MS) * speedMultiplier;
+  const workerBonus = getWorkerBonus(state, 'smelter');
+  return (1000 / GAME_CONFIG.BASE_SMELT_TIME_MS) * speedMultiplier * workerBonus;
 }

@@ -51,6 +51,27 @@ export interface GameState {
     totalPrestigeLevels: number;
     prestigeLevels: number;
   };
+
+  // Automation
+  automation: {
+    autoSmelt: boolean;
+    autoCraft: boolean;
+    autoSell: boolean;
+  };
+
+  // Workers
+  workers: {
+    miner: { count: number; morale: number };
+    smelter: { count: number; morale: number };
+    crafter: { count: number; morale: number };
+  };
+
+  // Random Events
+  currentEvent: {
+    type: 'ore_strike' | 'furnace_break' | 'market_crash' | 'discovery' | 'none';
+    timeRemainingMs: number;
+    effect: number;
+  };
 }
 
 export function createInitialState(): GameState {
@@ -91,6 +112,21 @@ export function createInitialState(): GameState {
       totalUpgradesPurchased: 0,
       totalPrestigeLevels: 0,
       prestigeLevels: 0,
+    },
+    automation: {
+      autoSmelt: false,
+      autoCraft: false,
+      autoSell: false,
+    },
+    workers: {
+      miner: { count: 0, morale: 100 },
+      smelter: { count: 0, morale: 100 },
+      crafter: { count: 0, morale: 100 },
+    },
+    currentEvent: {
+      type: 'none',
+      timeRemainingMs: 0,
+      effect: 1,
     },
   };
 }
