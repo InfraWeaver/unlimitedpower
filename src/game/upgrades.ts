@@ -1,6 +1,7 @@
 import { GameState } from './state';
 import { GAME_CONFIG, getUpgradeCost } from './constants';
 import { trackUpgradePurchased } from './statistics';
+import { recordUpgradeCombo, getComboDiscount } from './challenges';
 
 export interface UpgradeInfo {
   name: string;
@@ -35,12 +36,18 @@ export function purchaseUpgrade(state: GameState, upgradeId: keyof typeof GAME_C
   }
 
   const info = getUpgradeInfo(state, upgradeId);
+  const discount = getComboDiscount(state.challenges.upgradeCombo);
+  const finalCost = Math.floor(info.cost * (1 - discount));
+
+  if (state.resources.coins < finalCost) {
+    return state;
+  }
 
   let newState = {
     ...state,
     resources: {
       ...state.resources,
-      coins: state.resources.coins - info.cost,
+      coins: state.resources.coins - finalCost,
     },
     upgrades: {
       ...state.upgrades,
@@ -48,8 +55,9 @@ export function purchaseUpgrade(state: GameState, upgradeId: keyof typeof GAME_C
     },
   };
 
-  // Track upgrade purchase
+  // Track upgrade purchase and update combo
   newState = trackUpgradePurchased(newState);
+  newState = recordUpgradeCombo(newState);
 
   return newState;
 }

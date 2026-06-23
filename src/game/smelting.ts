@@ -2,6 +2,7 @@ import { GameState, OreType } from './state';
 import { GAME_CONFIG } from './constants';
 import { getWorkerBonus } from './workers';
 import { getEventStatus } from './events';
+import { getSmeltingPerkBonus } from './perks';
 
 export function queueOreForSmelting(state: GameState, ore: OreType, amount: number): GameState {
   const oreData = state.resources[ore];
@@ -38,8 +39,9 @@ export function updateSmelting(state: GameState, deltaMs: number): GameState {
   }
 
   const speedMultiplier = 1 + state.upgrades.betterFurnace_level * (GAME_CONFIG.BETTER_FURNACE_SPEED_MULTIPLIER - 1);
+  const perkBonus = getSmeltingPerkBonus(state);
   const workerBonus = getWorkerBonus(state, 'smelter');
-  const smeltTimeMs = GAME_CONFIG.BASE_SMELT_TIME_MS / (speedMultiplier * workerBonus);
+  const smeltTimeMs = GAME_CONFIG.BASE_SMELT_TIME_MS / (speedMultiplier * perkBonus * workerBonus);
 
   let newState = state;
 
@@ -94,6 +96,7 @@ export function getSmeltProgress(ore: OreType, state: GameState): number {
 
 export function getSmeltRate(state: GameState): number {
   const speedMultiplier = 1 + state.upgrades.betterFurnace_level * (GAME_CONFIG.BETTER_FURNACE_SPEED_MULTIPLIER - 1);
+  const perkBonus = getSmeltingPerkBonus(state);
   const workerBonus = getWorkerBonus(state, 'smelter');
-  return (1000 / GAME_CONFIG.BASE_SMELT_TIME_MS) * speedMultiplier * workerBonus;
+  return (1000 / GAME_CONFIG.BASE_SMELT_TIME_MS) * speedMultiplier * perkBonus * workerBonus;
 }

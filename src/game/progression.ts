@@ -1,5 +1,6 @@
 import { GameState, OreType } from './state';
 import { GAME_CONFIG } from './constants';
+import { getAutoUnlockTime } from './perks';
 
 export function updateProgression(state: GameState, deltaMs: number): GameState {
   const newPlaytime = state.progression.totalPlaytimeMs + deltaMs;
@@ -56,7 +57,8 @@ export function getTimeToAutoUnlock(state: GameState): number {
   if (state.progression.autoUnlockTriggered) {
     return 0;
   }
-  const remaining = GAME_CONFIG.AUTO_UNLOCK_TIME_MS - state.progression.totalPlaytimeMs;
+  const autoUnlockTime = getAutoUnlockTime(state);
+  const remaining = autoUnlockTime - state.progression.totalPlaytimeMs;
   return Math.max(0, remaining);
 }
 

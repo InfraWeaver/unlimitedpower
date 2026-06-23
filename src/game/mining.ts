@@ -4,6 +4,8 @@ import { calculatePrestigeBonus } from './prestige';
 import { trackOreMined } from './statistics';
 import { getWorkerBonus } from './workers';
 import { getEventMultiplier } from './events';
+import { getMiningPerkBonus } from './perks';
+import { getOreBonus } from './research';
 
 export function handleMiningClick(state: GameState): GameState {
   const clickAmount = state.mining.clickBonus;
@@ -32,13 +34,15 @@ export function updatePassiveMining(state: GameState, deltaMs: number): GameStat
     return state;
   }
 
-  // Calculate passive rate with upgrades, prestige, workers, and events
+  // Calculate passive rate with all bonuses
   const passiveRateMultiplier =
     1 + state.upgrades.hireMiner_level * (GAME_CONFIG.HIRE_MINER_RATE_MULTIPLIER - 1);
   const prestigeBonus = calculatePrestigeBonus(state.stats.prestigeLevels);
+  const perkBonus = getMiningPerkBonus(state);
   const workerBonus = getWorkerBonus(state, 'miner');
   const eventMultiplier = getEventMultiplier(state, 'ore_strike');
-  const effectiveRate = GAME_CONFIG.BASE_PASSIVE_RATE * passiveRateMultiplier * prestigeBonus * workerBonus * eventMultiplier;
+  const avgOreBonus = state.progression.unlockedOres.reduce((sum, ore) => sum + getOreBonus(state, ore), 0) / Math.max(1, state.progression.unlockedOres.length);
+  const effectiveRate = GAME_CONFIG.BASE_PASSIVE_RATE * passiveRateMultiplier * prestigeBonus * perkBonus * workerBonus * eventMultiplier * avgOreBonus;
 
   // Generate ore based on time elapsed
   const oreGenerated = (timeSinceLastUpdate / 1000) * effectiveRate;
@@ -69,7 +73,10 @@ export function getDisplayPassiveRate(state: GameState): number {
   const passiveRateMultiplier =
     1 + state.upgrades.hireMiner_level * (GAME_CONFIG.HIRE_MINER_RATE_MULTIPLIER - 1);
   const prestigeBonus = calculatePrestigeBonus(state.stats.prestigeLevels);
+  const perkBonus = getMiningPerkBonus(state);
   const workerBonus = getWorkerBonus(state, 'miner');
   const eventMultiplier = getEventMultiplier(state, 'ore_strike');
-  return GAME_CONFIG.BASE_PASSIVE_RATE * passiveRateMultiplier * prestigeBonus * workerBonus * eventMultiplier;
+  // Average ore bonus across all unlocked ores
+  const avgOreBonus = state.progression.unlockedOres.reduce((sum, ore) => sum + getOreBonus(state, ore), 0) / Math.max(1, state.progression.unlockedOres.length);
+  return GAME_CONFIG.BASE_PASSIVE_RATE * passiveRateMultiplier * prestigeBonus * perkBonus * workerBonus * eventMultiplier * avgOreBonus;
 }

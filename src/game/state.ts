@@ -1,4 +1,4 @@
-export type OreType = 'copper' | 'iron' | 'tin';
+export type OreType = 'copper' | 'iron' | 'tin' | 'gold' | 'platinum';
 
 export interface GameState {
   // Resources
@@ -6,6 +6,8 @@ export interface GameState {
     copper: { ore: number; bars: number };
     iron: { ore: number; bars: number };
     tin: { ore: number; bars: number };
+    gold: { ore: number; bars: number };
+    platinum: { ore: number; bars: number };
     tools: number;
     coins: number;
   };
@@ -22,6 +24,8 @@ export interface GameState {
     copper: { queuedOre: number; progress: number };
     iron: { queuedOre: number; progress: number };
     tin: { queuedOre: number; progress: number };
+    gold: { queuedOre: number; progress: number };
+    platinum: { queuedOre: number; progress: number };
   };
 
   // Upgrades
@@ -72,6 +76,29 @@ export interface GameState {
     timeRemainingMs: number;
     effect: number;
   };
+
+  // Research & Cosmetics
+  research: {
+    points: number;
+    doubleSmelt: boolean;
+    toolFusion: boolean;
+    automatedMining: boolean;
+  };
+
+  // Prestige Perks
+  prestigePerks: {
+    miningBoost: number; // levels purchased
+    smeltingBoost: number;
+    autoUnlockEarly: boolean;
+  };
+
+  // Challenges & Combos
+  challenges: {
+    dailyGoalProgress: number; // 0-1
+    dailyGoalReward: number; // coins earned today
+    upgradeCombo: number; // consecutive upgrades
+    lastUpgradeTime: number;
+  };
 }
 
 export function createInitialState(): GameState {
@@ -80,6 +107,8 @@ export function createInitialState(): GameState {
       copper: { ore: 0, bars: 0 },
       iron: { ore: 0, bars: 0 },
       tin: { ore: 0, bars: 0 },
+      gold: { ore: 0, bars: 0 },
+      platinum: { ore: 0, bars: 0 },
       tools: 0,
       coins: 0,
     },
@@ -92,6 +121,8 @@ export function createInitialState(): GameState {
       copper: { queuedOre: 0, progress: 0 },
       iron: { queuedOre: 0, progress: 0 },
       tin: { queuedOre: 0, progress: 0 },
+      gold: { queuedOre: 0, progress: 0 },
+      platinum: { queuedOre: 0, progress: 0 },
     },
     upgrades: {
       hireMiner_level: 0,
@@ -127,6 +158,23 @@ export function createInitialState(): GameState {
       type: 'none',
       timeRemainingMs: 0,
       effect: 1,
+    },
+    research: {
+      points: 0,
+      doubleSmelt: false,
+      toolFusion: false,
+      automatedMining: false,
+    },
+    prestigePerks: {
+      miningBoost: 0,
+      smeltingBoost: 0,
+      autoUnlockEarly: false,
+    },
+    challenges: {
+      dailyGoalProgress: 0,
+      dailyGoalReward: 0,
+      upgradeCombo: 0,
+      lastUpgradeTime: 0,
     },
   };
 }

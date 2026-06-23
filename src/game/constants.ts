@@ -50,16 +50,36 @@ export const GAME_CONFIG = {
       displayName: 'Copper',
       unlockedAt: 0,
       unlockedByBars: 0,
+      oreGenBonus: 1.0,
+      toolValueBonus: 1.0,
     },
     iron: {
       displayName: 'Iron',
       unlockedAt: 10000, // 10s of playtime (ms)
       unlockedByBars: 100,
+      oreGenBonus: 1.5,
+      toolValueBonus: 2.0,
     },
     tin: {
       displayName: 'Tin',
       unlockedAt: 30000, // 30s of playtime
       unlockedByBars: 300,
+      oreGenBonus: 2.0,
+      toolValueBonus: 4.0,
+    },
+    gold: {
+      displayName: 'Gold',
+      unlockedAt: 120000, // 2min of playtime
+      unlockedByBars: 1000,
+      oreGenBonus: 3.0,
+      toolValueBonus: 10.0,
+    },
+    platinum: {
+      displayName: 'Platinum',
+      unlockedAt: 300000, // 5min of playtime
+      unlockedByBars: 3000,
+      oreGenBonus: 5.0,
+      toolValueBonus: 50.0,
     },
   } as const,
 };
